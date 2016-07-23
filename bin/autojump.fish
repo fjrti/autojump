@@ -1,54 +1,74 @@
-complete -x -c j -a '(autojump --bash --complete (commandline -t))'
+set -x AUTOJUMP_SOURCED 1
 
-switch "$XDG_DATA_HOME"
-    case "*$USER*"
-        set -x AUTOJUMP_DATA_DIR "$XDG_DATA_HOME/autojump"
-    case '*'
-        set -x AUTOJUMP_DATA_DIR ~/.local/share/autojump
-end
-
-if not test -d $AUTOJUMP_DATA_DIR
-    mkdir $AUTOJUMP_DATA_DIR
-end
-
-# local installation
+# set user installation path
 if test -d ~/.autojump
     set -x PATH ~/.autojump/bin $PATH
 end
 
-set -x AUTOJUMP_HOME $HOME
-
-function __aj_err
-    echo $argv 1>&2; false
+# Set ostype, if not set
+if not set -q OSTYPE
+    set -gx OSTYPE (bash -c 'echo ${OSTYPE}')
 end
 
-function __aj_not_found
-    __aj_err "autojump: directory '"$argv"' not found"
-    __aj_err "Try `autojump --help` for more information."
+
+# enable tab completion
+complete -x -c j -a '(autojump --complete (commandline -t))'
+
+
+# set error file location
+if test (uname) = "Darwin"
+    set -x AUTOJUMP_ERROR_PATH ~/Library/autojump/errors.log
+else if test -d "$XDG_DATA_HOME"
+    set -x AUTOJUMP_ERROR_PATH $XDG_DATA_HOME/autojump/errors.log
+else
+    set -x AUTOJUMP_ERROR_PATH ~/.local/share/autojump/errors.log
 end
 
+if test ! -d (dirname $AUTOJUMP_ERROR_PATH)
+    mkdir -p (dirname $AUTOJUMP_ERROR_PATH)
+end
+
+
+# change pwd hook
 function __aj_add --on-variable PWD
     status --is-command-substitution; and return
-    autojump -a (pwd) >/dev/null ^$AUTOJUMP_DATA_DIR/autojump_errors
+    autojump --add (pwd) >/dev/null 2>>$AUTOJUMP_ERROR_PATH &
 end
 
+
+# misc helper functions
+function __aj_err
+    # TODO(ting|#247): set error file location
+    echo -e $argv 1>&2; false
+end
+
+# default autojump command
 function j
     switch "$argv"
         case '-*' '--*'
             autojump $argv
         case '*'
-            set -l new_path (autojump $argv)
-            if test -d "$new_path"
-                set_color red
-                echo $new_path
-                set_color normal
-                cd $new_path
+            set -l output (autojump $argv)
+            # Check for . and attempt a regular cd
+            if [ $output = "." ] 
+                cd $argv
             else
-                __aj_not_found $argv
+                if test -d "$output"
+                    set_color red
+                    echo $output
+                    set_color normal
+                    cd $output
+                else
+                    __aj_err "autojump: directory '"$argv"' not found"
+                    __aj_err "\n$output\n"
+                    __aj_err "Try `autojump --help` for more information."
+                end
             end
     end
 end
 
+
+# jump to child directory (subdirectory of current path)
 function jc
     switch "$argv"
         case '-*'
@@ -58,24 +78,30 @@ function jc
     end
 end
 
+
+# open autojump results in file browser
 function jo
-    if test -z (autojump $argv)
-        __aj_not_found $argv
-    else
-        switch (sh -c 'echo ${OSTYPE}')
-            case linux-gnu
+    set -l output (autojump $argv)
+    if test -d "$output"
+        switch $OSTYPE
+            case 'linux*'
                 xdg-open (autojump $argv)
             case 'darwin*'
                 open (autojump $argv)
             case cygwin
                 cygstart "" (cygpath -w -a (pwd))
             case '*'
-                __aj_error "Unknown operating system."
+                __aj_err "Unknown operating system: \"$OSTYPE\""
         end
-        echo end
+    else
+        __aj_err "autojump: directory '"$argv"' not found"
+        __aj_err "\n$output\n"
+        __aj_err "Try `autojump --help` for more information."
     end
 end
 
+
+# open autojump results (child directory) in file browser
 function jco
     switch "$argv"
         case '-*'

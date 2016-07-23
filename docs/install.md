@@ -2,32 +2,34 @@
 
 ### REQUIREMENTS
 
-- Python v2.6+
-- Bash v4.0 for tab completion (or zsh)
+- Python v2.6+ except v3.2
+- Supported shells:
+    - bash v4.0+
+    - zsh
+    - fish
+    - tcsh (experimental)
+    - clink (Windows, experimental)
 
-If you are unable to update Python to a supported version, older versions of
-autojump can be [downloaded][dl] and installed manually.
+### AUTOMATIC
 
-- Python v2.4 is supported by [release v12][v12].
-
-### AUTOMATIC INSTALLATION
-
-**Linux**
+#### Linux
 
 autojump is included in the following distro repositories, please use relevant
 package management utilities to install (e.g. yum, apt-get, etc):
 
-- Debian\* testing/unstable, Ubuntu, Linux Mint
-- RedHat, Fedora, CentOS
+- Debian testing/unstable, Ubuntu, Linux Mint
+
+    All Debian-derived distros require manual activation for policy reasons,
+    please see `/usr/share/doc/autojump/README.Debian`.
+
+- RedHat, Fedora, CentOS (install `autojump-zsh` for zsh, `autojump-fish` for
+  fish, etc.)
 - ArchLinux
 - Gentoo
 - Frugalware
 - Slackware
 
-\* Requires manual activation for policy reasons, please see
-``/usr/share/doc/autojump/README.Debian``.
-
-**Mac**
+#### OS X
 
 Homebrew is the recommended installation method for Mac OS X:
 
@@ -37,42 +39,18 @@ MacPorts also available:
 
     port install autojump
 
-**Other**
+## Windows
 
-Please check the [Wiki][wiki] for an up to date listing of installation methods.
+Windows support is enabled by [clink](https://mridgers.github.io/clink/) which
+should be installed prior to installing autojump.
 
-### MANUAL INSTALLATION
-
-Grab a copy of autojump:
-
-    git clone git://github.com/joelthelion/autojump.git
-
-Run the installation script:
-
-    cd autojump
-    ./install.sh [ --local ]
-
-and follow on screen instructions.
-
-### MANUAL UNINSTALLATION
-
-It is recommended to use your distribution's relevant package management
-utilities, unless you installed manually or ran into uninstallation issues.
+### MANUAL
 
 Grab a copy of autojump:
 
     git clone git://github.com/joelthelion/autojump.git
 
-Run the uninstallation script:
+Run the installation script and follow on screen instructions.
 
     cd autojump
-    ./uninstall.sh
-
-and follow on screen instructions.
-
-If you keep getting `autojump: command not found` at the prompt, do:`unset
-PROMPT_COMMAND`. You can also restart your shell.
-
-[dl]: https://github.com/joelthelion/autojump/downloads
-[v12]: https://github.com/downloads/joelthelion/autojump/autojump_v12.tar.gz
-[wiki]: https://github.com/joelthelion/autojump/wiki
+    ./install.py or ./uninstall.py
